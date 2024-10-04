@@ -8,41 +8,54 @@
     <script src="script.js" defer></script>
 </head>
 <body>
-    <h1 id="debug"></h1>
-    <h3>Mass</h3>
-    <h3 id="mass"></h3>
-    <br>
-    <h3>Density</h3>
-    <h3 id="density"></h3>
-    <br>
-    <h3>Fusion</h3>
-    <h3 id="fusion"></h3>
-    <br>
-    <h3>Core temperature</h3>
-    <h3 id="core_temp"></h3>
-    <br>
-    <h3>Inwards pressure</h3>
-    <h3 id="inwards_core_pressure"></h3>
-    <br>
-    <h3>Available fuel factor</h3>
-    <h3 id="core_size"></h3>
-    <br>
-    <h3>Available fuel mass</h3>
-    <h3 id="core_mass"></h3>
-    <br>
-    <h3>Hydrogen mass</h3>
-    <h3 id="hydrogen_mass"></h3>
-    <br>
-    <h3>Helium mass</h3>
-    <h3 id="helium_mass"></h3>
-    <br>
-    <h3>Hydrogen factor</h3>
-    <h3 id="hydrogen_factor"></h3>
-    <br>
-    <h3>Helium factor</h3>
-    <h3 id="helium_factor"></h3>
-    <br>
-    <h3>Carbon factor</h3>
-    <h3 id="carbon_factor"></h3>
+    <div style="display: flex;">
+        <div style="width: 400px;">
+            <h1 id="debug"></h1>
+            <p>Mass</p>
+            <p id="mass"></p>
+            <br>
+            <p>Density</p>
+            <p id="density"></p>
+            <br>
+            <p>Fusion</p>
+            <p id="fusion"></p>
+            <br>
+            <p>Core temperature</p>
+            <p id="core_temp"></p>
+            <br>
+            <p>Inwards pressure</p>
+            <p id="inwards_core_pressure"></p>
+            <br>
+            <p>Core size factor</p>
+            <p id="core_size"></p>
+            <br>
+            <p>Core mass</p>
+            <p id="core_mass"></p>
+            <br>
+            <p>Hydrogen mass</p>
+            <p id="hydrogen_mass"></p>
+            <br>
+            <p>Helium mass</p>
+            <p id="helium_mass"></p>
+            <br>
+            <p>Hydrogen factor</p>
+            <p id="hydrogen_factor"></p>
+            <br>
+            <p>Helium factor</p>
+            <p id="helium_factor"></p>
+            <br>
+            <p>Carbon factor</p>
+            <p id="carbon_factor"></p>
+        </div>
+        <div style="width: 100%;">
+            <div class="percent-bar">
+                <div id="percent-bar-hydrogen-core" class="percent-bar-hydrogen"></div>
+                <div id="percent-bar-helium-core" class="percent-bar-helium"></div>
+            </div>
+            <div class="percent-bar">
+                <div id="percent-bar-hydrogen-all" class="percent-bar-hydrogen"></div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
