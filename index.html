@@ -21,13 +21,13 @@
             <p id="fusion"></p>
             <br>
             <p>Core temperature</p>
-            <p id="core_temp"></p>
+            <p id="core_temperature"></p>
             <br>
             <p>Inwards pressure</p>
             <p id="inwards_core_pressure"></p>
             <br>
             <p>Core size factor</p>
-            <p id="core_size"></p>
+            <p id="core_mass_factor"></p>
             <br>
             <p>Core mass</p>
             <p id="core_mass"></p>
@@ -38,6 +38,9 @@
             <p>Helium mass</p>
             <p id="helium_mass"></p>
             <br>
+            <p>Carbon mass</p>
+            <p id="carbon_mass"></p>
+            <br>
             <p>Hydrogen factor</p>
             <p id="hydrogen_factor"></p>
             <br>
@@ -47,13 +50,33 @@
             <p>Carbon factor</p>
             <p id="carbon_factor"></p>
         </div>
+        <div style="width: 50%;">
+            <p>Time warp</p>
+            <input type="range" id="time_slider" value="1" min="0" max="200">
+            <label id="time_label"></label>
+        </div>
         <div style="width: 100%;">
+            <h3>Core</h3>
             <div class="percent-bar">
                 <div id="percent-bar-hydrogen-core" class="percent-bar-hydrogen"></div>
                 <div id="percent-bar-helium-core" class="percent-bar-helium"></div>
+                <div id="percent-bar-carbon-core" class="percent-bar-carbon"></div>
             </div>
+            <h3 style="margin-top: 50px;">All</h3>
             <div class="percent-bar">
                 <div id="percent-bar-hydrogen-all" class="percent-bar-hydrogen"></div>
+                <div id="percent-bar-helium-all" class="percent-bar-hydrogen"></div>
+                <div id="percent-bar-carbon-all" class="percent-bar-hydrogen"></div>
+            </div>
+            <h3 style="margin-top: 50px;">Temperature</h3>
+            <div class="percent-bar">
+                <div id="temperature-bar-below-hydrogen-fusion" class="temperature-bar-below-hydrogen-fusion"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <p id="temperature-bar-label1">1</p>
+                <p id="temperature-bar-label2">1</p>
+                <p id="temperature-bar-label3">1</p>
+                <p id="temperature-bar-label4">1</p>
             </div>
         </div>
     </div>

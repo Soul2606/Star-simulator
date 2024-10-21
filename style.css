@@ -19,3 +19,11 @@ body{
 .percent-bar-helium{
     background-color: rgb(106, 35, 161);
 }
+
+.percent-bar-carbon{
+    background-color: rgb(230, 105, 22);
+}
+
+.temperature-bar-below-hydrogen-fusion{
+    background-color: rgb(23, 129, 13);    
+}
