@@ -1,17 +1,4 @@
 
-const d_mass = document.getElementById("mass")
-const d_density = document.getElementById("density")
-const d_fusion = document.getElementById("fusion")
-const d_core_temperature = document.getElementById("core_temperature")
-const d_core_pressure = document.getElementById("inwards_core_pressure")
-const d_core_mass_factor = document.getElementById("core_mass_factor")
-const d_core_mass = document.getElementById("core_mass")
-const d_hydrogen_mass = document.getElementById("hydrogen_mass")
-const d_helium_mass = document.getElementById("helium_mass")
-const d_carbon_mass = document.getElementById('carbon_mass')
-const d_hydrogen_factor = document.getElementById("hydrogen_factor")
-const d_helium_factor = document.getElementById("helium_factor")
-const d_carbon_factor = document.getElementById("carbon_factor")
 const d_percent_bar_hydrogen_core = document.getElementById('percent-bar-hydrogen-core')
 const d_percent_bar_helium_core = document.getElementById('percent-bar-helium-core')
 const d_percent_bar_carbon_core = document.getElementById('percent-bar-carbon-core')
@@ -20,6 +7,7 @@ const d_percent_bar_helium_all = document.getElementById('percent-bar-helium-all
 const d_percent_bar_carbon_all = document.getElementById('percent-bar-carbon-all')
 const d_temperature_bar_below_hydrogen_fusion = document.getElementById('temperature-bar-below-hydrogen-fusion')
 
+const gravitational_constant = 6.67430e-11 //m^3 kg^-1 s^-2
 
 const earth_atmosphere_mass = 5.148e+18 //Kg
 const earth_ocean_mass = 1.4e+21 //Kg
@@ -36,7 +24,12 @@ const fusion_speed_divider = 10 ** 1
 const density_change_damping = 10
 
 let time = 10 ** 16
-let mass = 1 * solar_mass
+let mass = 1 * solar_mass //Kg
+let density = 150000 //Kg/m3
+let radius = (mass / density * (3/(4*Math.PI))) ** (1/3) //m
+let surface_gravity = gravitational_constant * mass / radius ** 2 //m/s^2
+let expansion_velocity = 0 //m/s
+let fusion = 0
 
 // Do not change these variables using any other method than the change_*variable*() function
 let hydrogen_factor = 1 
@@ -45,11 +38,12 @@ let carbon_factor = 0
 
 let hydrogen_fusion = 0
 let helium_fusion = 0
-let core_temperature = 10 ** 8
-let inwards_core_pressure = mass
-let core_mass_factor =  Math.min(0.9 / ((mass / (solar_mass * 0.4)) ** 3), 0.9)
-let core_mass = mass * core_mass_factor
-let density = solar_mass
+let core_temperature = 1.5e+8 //K
+let core_mass_factor =  Math.min(0.9 / ((mass / (solar_mass * 0.4)) ** 3), 0.9) //Factor
+let core_mass = mass * core_mass_factor //Kg
+
+let pressure = density * core_temperature // This needs work
+
 
 
 
@@ -57,6 +51,7 @@ function relu(value){
     //rectified linear unit
     return Math.max(value, 0)
 }
+
 
 
 
@@ -73,6 +68,7 @@ function simplify(value){
     }
     return value.toFixed(relu(3 - String(Math.abs(Math.floor(value))).length)) + symbols[times_divided]
 }
+
 
 
 
@@ -97,12 +93,31 @@ function simplify_by_stellar_masses(value, specify){
 
 
 
+
 function clamp(value, min, max){
     if (min === undefined && max === undefined) {
         return Math.max(Math.min(value, 1), 0)
     }
     return (Math.max(Math.min(value, max), min))
 }
+
+
+
+
+function temperature_at_depth(depth) {
+    if (depth < 0 || depth > 1) {
+        throw new Error("depth out of range", depth);
+    }
+    const stefan_boltzmann_constant = 5.67e-8
+    const luminosity = core_temperature
+    const surface_temperature = (core_temperature/(4 * Math.PI * radius**2 * stefan_boltzmann_constant))**(1/4)
+    return (core_temperature - surface_temperature) * depth ** 2 + surface_temperature
+}
+console.log(simplify(temperature_at_depth(0)))
+console.log(simplify(temperature_at_depth(0.33)))
+console.log(simplify(temperature_at_depth(0.66)))
+console.log(simplify(temperature_at_depth(1)))
+
 
 
 
@@ -119,6 +134,7 @@ function change_hydrogen(value){
 
 
 
+
 function change_helium(value){
     let helium_mass = helium_factor * mass
     let hydrogen_mass = hydrogen_factor * mass
@@ -132,6 +148,7 @@ function change_helium(value){
 
 
 
+
 function change_carbon(value){
     let helium_mass = helium_factor * mass
     let hydrogen_mass = hydrogen_factor * mass
@@ -141,6 +158,35 @@ function change_carbon(value){
     helium_factor = helium_mass / mass
     hydrogen_factor = hydrogen_mass / mass
     carbon_factor = carbon_mass / mass
+}
+
+
+
+
+function display_variables(variables) {
+    const variable_display_div = document.getElementById('variable-display')
+    if (typeof variables === 'object') {
+        for (const name in variables) {
+            const value = Number(variables[name]);
+            let name_display = document.getElementById(`variable-display-name-${name}`)
+            let value_display = document.getElementById(`variable-display-value-${name}`)
+            if (name_display === null) {
+                name_display = document.createElement('p')
+                name_display.textContent = name
+                name_display.id = `variable-display-name-${name}`
+
+                value_display = document.createElement('p')
+                value_display.id = `variable-display-value-${name}`
+                variable_display_div.innerHTML += `<br>`
+                variable_display_div.appendChild(name_display)
+                variable_display_div.appendChild(value_display)
+            }
+           value_display.textContent = simplify(value)
+        }
+    }else{
+        throw new Error("Invalid parameters");
+        
+    }
 }
 
 
@@ -160,60 +206,30 @@ setInterval(main, 100)
 
 function main(){
 
-    inwards_core_pressure = mass
+    radius = (mass / density * (3/4/Math.PI)) ** (1/3) //m
+
     core_mass_factor =  Math.min(max_fuel_available / ((mass / (solar_mass * 0.4)) ** 3), max_fuel_available)
     core_mass = mass * core_mass_factor
 
-    
-    let hydrogen_in_core_factor = relu(clamp(hydrogen_factor,0,core_mass_factor) - helium_factor - carbon_factor) / core_mass_factor
-    hydrogen_fusion = relu(core_temperature - hydrogen_fusion_temperature_requirement) * hydrogen_in_core_factor / fusion_speed_divider
-
-
-    let helium_in_core_factor = clamp(helium_factor / core_mass_factor,0,1-carbon_factor)
-    helium_fusion = relu(core_temperature - helium_fusion_temperature_requirement) * helium_in_core_factor / fusion_speed_divider
-
-
-    let carbon_in_core_factor = relu(carbon_factor / core_mass_factor)
-
-    let fusion = hydrogen_fusion + helium_fusion
-
     core_temperature = (mass / solar_mass * 10**7.1 - fusion)
-    density = ice_density / Math.log(core_temperature)
-
-    change_hydrogen(-(hydrogen_fusion * time))
-    change_helium(hydrogen_fusion * time)
 
 
-    change_helium(-(helium_fusion * time))
-    change_carbon(helium_fusion * time)
+    display_variables({mass, density, radius, surface_gravity, fusion, core_temperature, core_mass, core_mass_factor, hydrogen_factor, helium_factor, carbon_factor})
 
-
-    {
-    d_mass.textContent = simplify_by_stellar_masses(mass)
-    d_density.textContent = simplify(density)
-    d_fusion.textContent = simplify(hydrogen_fusion + helium_fusion)
-    d_core_temperature.textContent = simplify(core_temperature)
-    d_core_pressure.textContent = simplify(inwards_core_pressure)
-    d_core_mass_factor.textContent = core_mass_factor
-    d_core_mass.textContent = simplify_by_stellar_masses(core_mass)
-    d_hydrogen_mass.textContent = simplify_by_stellar_masses(hydrogen_factor * mass)
-    d_helium_mass.textContent = simplify_by_stellar_masses(helium_factor * mass)
-    d_carbon_mass.textContent = simplify_by_stellar_masses(carbon_factor * mass)
-    d_hydrogen_factor.textContent = hydrogen_factor.toFixed(2)
-    d_helium_factor.textContent = helium_factor.toFixed(2)
-    d_carbon_factor.textContent = carbon_factor.toFixed(2)
+    /*
     d_percent_bar_hydrogen_core.style.width = (hydrogen_in_core_factor * 100) + '%'
     d_percent_bar_helium_core.style.width = (helium_in_core_factor * 100) + '%'
     d_percent_bar_carbon_core.style.width = (carbon_in_core_factor * 100) + '%'
     d_percent_bar_hydrogen_all.style.width = (hydrogen_factor* 100) + '%'
     d_percent_bar_helium_all.style.width = (helium_factor* 100) + '%'
     d_percent_bar_carbon_all.style.width = (carbon_factor* 100) + '%'
-
-    d_temperature_bar_below_hydrogen_fusion.style.width = Math.sqrt(hydrogen_fusion_temperature_requirement / core_temperature) * 100 + '%'
-    const radius = 45
-    document.getElementById('temperature-bar-label1').textContent = simplify(core_temperature * (radius - radius / 3 * 0) ** -2)
-    document.getElementById('temperature-bar-label2').textContent = simplify(core_temperature * (radius - radius / 3 * 1) ** -2)
-    document.getElementById('temperature-bar-label3').textContent = simplify(core_temperature * (radius - radius / 3 * 2) ** -2)
-    document.getElementById('temperature-bar-label4').textContent = simplify(core_temperature)
-    }
+    */
+   {
+       const radius = 45
+       d_temperature_bar_below_hydrogen_fusion.style.width = Math.sqrt(hydrogen_fusion_temperature_requirement / core_temperature) * 100 + '%'
+        document.getElementById('temperature-bar-label1').textContent = simplify(core_temperature * (radius - radius / 3 * 0) ** -2)
+        document.getElementById('temperature-bar-label2').textContent = simplify(core_temperature * (radius - radius / 3 * 1) ** -2)
+        document.getElementById('temperature-bar-label3').textContent = simplify(core_temperature * (radius - radius / 3 * 2) ** -2)
+        document.getElementById('temperature-bar-label4').textContent = simplify(core_temperature)
+   }
 }
