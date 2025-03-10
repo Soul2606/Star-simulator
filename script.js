@@ -356,6 +356,8 @@ function main(){
 
     display_variables({mass, average_density, radius, surface_gravity, core_mass, core_mass_factor, hydrogen_factor, helium_factor, carbon_factor})
 
+    display_functions({temperature, density}, [0,0.2,0.4,0.6,0.8,1])
+
     /*
     d_percent_bar_hydrogen_core.style.width = (hydrogen_in_core_factor * 100) + '%'
     d_percent_bar_helium_core.style.width = (helium_in_core_factor * 100) + '%'
