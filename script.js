@@ -275,39 +275,53 @@ function display_variables(variables) {
 
 
 
-function display_functions(level_of_detail,functions) {
-    if (typeof functions === 'object' && (!Array.isArray(functions)) && typeof level_of_detail === 'number') {
+const chart_instance = {}
+function display_functions(functions, parameter_values = [0,1]) {
+    if (typeof functions === 'object' && (!Array.isArray(functions)) && Array.isArray(parameter_values)) {
         
         const function_display_div = document.getElementById('function-display')
-        while (function_display_div.hasChildNodes) {
-            function_display_div.firstChild.remove()
+
+        while (Array.from(function_display_div.children) > Object.entries(functions).length) {
+            function_display_div.lastChild.remove()
         }
 
         let index = 0
         for(const key in functions){
-            const function_reference = functions[key].value
-            const parameter_values = Array.from(functions[key].parameter_values)
+            const function_reference = functions[key]
             if (typeof function_reference === 'function') {
                 const labels = parameter_values
                 const results = parameter_values.map(function_reference)
+                const canvas_id = `function-display-canvas${index}`
 
-                const new_canvas = document.createElement('canvas')
-                new_canvas.id = `function-display-${key+index}`
+                let canvas = document.getElementById(canvas_id)
 
-                new Chart(new_canvas.id, {
-                    type: 'line',
-                    data:{
-                        labels:labels,
-                        datasets:[{
-                            backgroundColor: 'rgba(0,0,255,1).0',
-                            borderColor: 'rgba(255,255,255,1).0',
-                            data:results
-                        }]
-                    },
-                    options:{
-                        legend: { display:false }
-                    }
-                })
+                if (!canvas) {                    
+                    canvas = document.createElement('canvas')
+                    canvas.id = canvas_id
+                    function_display_div.appendChild(canvas)
+                }
+
+                if (chart_instance[canvas_id]) {
+                    chart_instance[canvas_id].data.labels = labels
+                    chart_instance[canvas_id].data.datasets[0].data = results
+                    chart_instance[canvas_id].update()
+                } else {
+                    chart_instance[canvas_id] = new Chart(canvas, {
+                        type: 'line',
+                        data:{
+                            labels:labels,
+                            datasets:[{
+                                backgroundColor: 'rgba(0,0,255,1).0',
+                                borderColor: 'rgba(255,255,255,1).0',
+                                data:results
+                            }]
+                        },
+                        options:{
+                            legend: { display:false }
+                        }
+                    })
+                }
+
             } else {
                 throw new Error("Functions array contains a non function element",functions);
             }
@@ -317,7 +331,6 @@ function display_functions(level_of_detail,functions) {
         throw new Error("Invalid parameter",functions);
     }
 }
-display_functions(1,[()=>1])
 
 
 
