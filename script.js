@@ -275,6 +275,53 @@ function display_variables(variables) {
 
 
 
+function display_functions(level_of_detail,functions) {
+    if (typeof functions === 'object' && (!Array.isArray(functions)) && typeof level_of_detail === 'number') {
+        
+        const function_display_div = document.getElementById('function-display')
+        while (function_display_div.hasChildNodes) {
+            function_display_div.firstChild.remove()
+        }
+
+        let index = 0
+        for(const key in functions){
+            const function_reference = functions[key].value
+            const parameter_values = Array.from(functions[key].parameter_values)
+            if (typeof function_reference === 'function') {
+                const labels = parameter_values
+                const results = parameter_values.map(function_reference)
+
+                const new_canvas = document.createElement('canvas')
+                new_canvas.id = `function-display-${key+index}`
+
+                new Chart(new_canvas.id, {
+                    type: 'line',
+                    data:{
+                        labels:labels,
+                        datasets:[{
+                            backgroundColor: 'rgba(0,0,255,1).0',
+                            borderColor: 'rgba(255,255,255,1).0',
+                            data:results
+                        }]
+                    },
+                    options:{
+                        legend: { display:false }
+                    }
+                })
+            } else {
+                throw new Error("Functions array contains a non function element",functions);
+            }
+            index++
+        }
+    }else{
+        throw new Error("Invalid parameter",functions);
+    }
+}
+display_functions(1,[()=>1])
+
+
+
+
 const d_time_slider = document.getElementById('time_slider')
 d_time_slider.addEventListener('input', ()=>{
     document.getElementById('time_label').textContent = d_time_slider.value / 10
