@@ -17,32 +17,89 @@ const jupiter_mass = 1.898e+27 //Kg
 const solar_mass = 1.9891e+30 //Kg
 
 const ice_density = 900 //Kg/m^3
-const hydrogen_fusion_temperature_requirement = 10 ** 7
+const hydrogen_fusion_temperature_requirement = 10 ** 8
 const helium_fusion_temperature_requirement = 10 ** 9
 const max_fuel_available = 0.9
-const fusion_speed_divider = 10 ** 1
+const fusion_speed_multiplier = 5.1e+13
 const density_change_damping = 10
 
 let time = 10 ** 16
 let mass = 1 * solar_mass //Kg
-let density = 150000 //Kg/m3
-let radius = (mass / density * (3/(4*Math.PI))) ** (1/3) //m
+let average_density = 150000 //Kg/m3
+let radius = (mass / average_density * (3/(4*Math.PI))) ** (1/3) //m
 let surface_gravity = gravitational_constant * mass / radius ** 2 //m/s^2
 let expansion_velocity = 0 //m/s
-let fusion = 0
 
 // Do not change these variables using any other method than the change_*variable*() function
 let hydrogen_factor = 1 
 let helium_factor = 0
 let carbon_factor = 0
 
-let hydrogen_fusion = 0
-let helium_fusion = 0
 let core_temperature = 1.5e+8 //K
-let core_mass_factor =  Math.min(0.9 / ((mass / (solar_mass * 0.4)) ** 3), 0.9) //Factor
+let core_mass_factor =  Math.min(0.9 / ((mass / (solar_mass * 0.4)) ** 3), 0.9) //This function approximates the fusion fuel availability for different classes of stars
 let core_mass = mass * core_mass_factor //Kg
 
-let pressure = density * core_temperature // This needs work
+
+
+
+const temperature = (depth)=>{ //K
+    if (depth < 0 || depth > 1) {
+        throw new Error("depth out of range", depth);
+    }
+    const surface_temperature = core_temperature / radius * 5000 //This is an approximation
+    return (core_temperature - surface_temperature) * depth ** 2 + surface_temperature
+}
+
+
+
+
+const density = (depth)=>{ //Kg/m3
+    if (depth < 0 || depth > 1) {
+        throw new Error("depth out of range", depth);
+    }
+    return average_density * depth ** 2
+}
+
+
+
+
+const pressure = (depth)=>{ //gigapascal 1 000 000 000N/m2
+    if (depth < 0 || depth > 1) {
+        throw new Error("depth out of range", depth);
+    }
+    return density(depth) * temperature(depth) / 1e+6 //Approximation to get the value to be close to the observed value in the sun
+}
+
+
+
+
+const hydrogen_fusion = (depth)=>{ //Watts
+    if (depth < 0 || depth > 1) {
+        throw new Error("depth out of range", depth);
+    }
+    return (density(depth) * relu(temperature(depth) - hydrogen_fusion_temperature_requirement)) * fusion_speed_multiplier
+}
+
+
+
+
+const helium_fusion = (depth)=>{ //Watts
+    if (depth < 0 || depth > 1) {
+        throw new Error("depth out of range", depth);
+    }
+    return (density(depth) * relu(temperature(depth) - helium_fusion_temperature_requirement)) * fusion_speed_multiplier
+}
+
+
+
+
+const fusion = (depth)=>{ //Watts
+    if (depth < 0 || depth > 1) {
+        throw new Error("depth out of range", depth);
+    }
+    return hydrogen_fusion(depth) + helium_fusion(depth)
+}
+console.log(simplify(fusion(1)))
 
 
 
@@ -58,8 +115,7 @@ function relu(value){
 function simplify(value){
     const symbols = ['','k','m','b','t','qa','qi','sx','sp','oc','no','dec','und','dod','trd','qad','qid','sxd','spd','ocd','nod','vig']
     if(value == Infinity || isNaN(value)){
-        console.warn('bad value', value)
-        return 0
+        throw new Error("bad value", value);
     }
     let times_divided = 0
     while(value >= 1000){
@@ -100,23 +156,6 @@ function clamp(value, min, max){
     }
     return (Math.max(Math.min(value, max), min))
 }
-
-
-
-
-function temperature_at_depth(depth) {
-    if (depth < 0 || depth > 1) {
-        throw new Error("depth out of range", depth);
-    }
-    const stefan_boltzmann_constant = 5.67e-8
-    const luminosity = core_temperature
-    const surface_temperature = (core_temperature/(4 * Math.PI * radius**2 * stefan_boltzmann_constant))**(1/4)
-    return (core_temperature - surface_temperature) * depth ** 2 + surface_temperature
-}
-console.log(simplify(temperature_at_depth(0)))
-console.log(simplify(temperature_at_depth(0.33)))
-console.log(simplify(temperature_at_depth(0.66)))
-console.log(simplify(temperature_at_depth(1)))
 
 
 
@@ -167,7 +206,7 @@ function display_variables(variables) {
     const variable_display_div = document.getElementById('variable-display')
     if (typeof variables === 'object') {
         for (const name in variables) {
-            const value = Number(variables[name]);
+            const value = variables[name];
             let name_display = document.getElementById(`variable-display-name-${name}`)
             let value_display = document.getElementById(`variable-display-value-${name}`)
             if (name_display === null) {
@@ -175,13 +214,57 @@ function display_variables(variables) {
                 name_display.textContent = name
                 name_display.id = `variable-display-name-${name}`
 
-                value_display = document.createElement('p')
+                switch (typeof value) {
+                    case 'number':
+                        value_display = document.createElement('p')
+                    break;
+                    case 'string':
+                        value_display = document.createElement('p')
+                    break;
+                    case 'object':
+                        value_display = document.createElement('div')
+                        value_display.className = 'value-display-grid'
+                    default:
+                        value_display = document.createElement('p')
+                    break;
+                }
                 value_display.id = `variable-display-value-${name}`
                 variable_display_div.innerHTML += `<br>`
                 variable_display_div.appendChild(name_display)
                 variable_display_div.appendChild(value_display)
             }
-           value_display.textContent = simplify(value)
+            switch (typeof value) {
+                case 'number':
+                    value_display.textContent = simplify(value)
+                break;
+                case 'string':
+                    value_display.textContent = value
+                break;
+                case 'object':
+                    const value_display_children = Array.from(value_display.children)
+                    if (Array.isArray(value)) {
+                        for (let index = 0; index < Math.max(value.length, value_display_children.length); index++) {
+                            if (value_display_children[index]) {
+                                value_display_children[index].textContent = value[index]
+                            }else{
+                                const paragraph = document.createElement('p')
+                                paragraph.textContent = value
+                                value_display.appendChild(paragraph)
+                            }
+                            if (value_display_children[index] && !value[index]) {
+                                value_display_children[index].remove()
+                                index--
+                                continue
+                            }
+                        }
+                    }else{
+                        // I will work on this later
+                    }
+                break;
+                default:
+                    value_display.textContent = 'Err'
+                break;
+            }
         }
     }else{
         throw new Error("Invalid parameters");
@@ -206,15 +289,12 @@ setInterval(main, 100)
 
 function main(){
 
-    radius = (mass / density * (3/4/Math.PI)) ** (1/3) //m
+    radius = (mass / average_density * (3/4/Math.PI)) ** (1/3) //m
 
     core_mass_factor =  Math.min(max_fuel_available / ((mass / (solar_mass * 0.4)) ** 3), max_fuel_available)
     core_mass = mass * core_mass_factor
 
-    core_temperature = (mass / solar_mass * 10**7.1 - fusion)
-
-
-    display_variables({mass, density, radius, surface_gravity, fusion, core_temperature, core_mass, core_mass_factor, hydrogen_factor, helium_factor, carbon_factor})
+    display_variables({mass, average_density, radius, surface_gravity, core_mass, core_mass_factor, hydrogen_factor, helium_factor, carbon_factor})
 
     /*
     d_percent_bar_hydrogen_core.style.width = (hydrogen_in_core_factor * 100) + '%'
