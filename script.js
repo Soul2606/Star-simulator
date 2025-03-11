@@ -7,100 +7,6 @@ const d_percent_bar_helium_all = document.getElementById('percent-bar-helium-all
 const d_percent_bar_carbon_all = document.getElementById('percent-bar-carbon-all')
 const d_temperature_bar_below_hydrogen_fusion = document.getElementById('temperature-bar-below-hydrogen-fusion')
 
-const gravitational_constant = 6.67430e-11 //m^3 kg^-1 s^-2
-
-const earth_atmosphere_mass = 5.148e+18 //Kg
-const earth_ocean_mass = 1.4e+21 //Kg
-const moon_mass = 7.34767e+22 //Kg
-const earth_mass = 5.97219e+24 //Kg
-const jupiter_mass = 1.898e+27 //Kg
-const solar_mass = 1.9891e+30 //Kg
-
-const ice_density = 900 //Kg/m^3
-const hydrogen_fusion_temperature_requirement = 10 ** 8
-const helium_fusion_temperature_requirement = 10 ** 9
-const max_fuel_available = 0.9
-const fusion_speed_multiplier = 5.1e+13
-const density_change_damping = 10
-
-let time = 10 ** 16
-let mass = 1 * solar_mass //Kg
-let average_density = 150000 //Kg/m3
-let radius = (mass / average_density * (3/(4*Math.PI))) ** (1/3) //m
-let surface_gravity = gravitational_constant * mass / radius ** 2 //m/s^2
-let expansion_velocity = 0 //m/s
-
-// Do not change these variables using any other method than the change_*variable*() function
-let hydrogen_factor = 1 
-let helium_factor = 0
-let carbon_factor = 0
-
-let core_temperature = 1.5e+8 //K
-let core_mass_factor =  Math.min(0.9 / ((mass / (solar_mass * 0.4)) ** 3), 0.9) //This function approximates the fusion fuel availability for different classes of stars
-let core_mass = mass * core_mass_factor //Kg
-
-
-
-
-const temperature = (depth)=>{ //K
-    if (depth < 0 || depth > 1) {
-        throw new Error("depth out of range", depth);
-    }
-    const surface_temperature = core_temperature / radius * 5000 //This is an approximation
-    return (core_temperature - surface_temperature) * depth ** 2 + surface_temperature
-}
-
-
-
-
-const density = (depth)=>{ //Kg/m3
-    if (depth < 0 || depth > 1) {
-        throw new Error("depth out of range", depth);
-    }
-    return average_density * depth ** 2
-}
-
-
-
-
-const pressure = (depth)=>{ //gigapascal 1 000 000 000N/m2
-    if (depth < 0 || depth > 1) {
-        throw new Error("depth out of range", depth);
-    }
-    return density(depth) * temperature(depth) / 1e+6 //Approximation to get the value to be close to the observed value in the sun
-}
-
-
-
-
-const hydrogen_fusion = (depth)=>{ //Watts
-    if (depth < 0 || depth > 1) {
-        throw new Error("depth out of range", depth);
-    }
-    return (density(depth) * relu(temperature(depth) - hydrogen_fusion_temperature_requirement)) * fusion_speed_multiplier
-}
-
-
-
-
-const helium_fusion = (depth)=>{ //Watts
-    if (depth < 0 || depth > 1) {
-        throw new Error("depth out of range", depth);
-    }
-    return (density(depth) * relu(temperature(depth) - helium_fusion_temperature_requirement)) * fusion_speed_multiplier
-}
-
-
-
-
-const fusion = (depth)=>{ //Watts
-    if (depth < 0 || depth > 1) {
-        throw new Error("depth out of range", depth);
-    }
-    return hydrogen_fusion(depth) + helium_fusion(depth)
-}
-console.log(simplify(fusion(1)))
-
 
 
 
@@ -154,49 +60,13 @@ function clamp(value, min, max){
     if (min === undefined && max === undefined) {
         return Math.max(Math.min(value, 1), 0)
     }
+    if (min === undefined) {
+        return Math.min(value, max)
+    }
+    if (max === undefined) {
+        return Math.max(value, min)
+    }
     return (Math.max(Math.min(value, max), min))
-}
-
-
-
-
-function change_hydrogen(value){
-    let hydrogen_mass = hydrogen_factor * mass
-    let helium_mass = helium_factor * mass
-    let carbon_mass = carbon_factor * mass
-    hydrogen_mass += value
-    mass += value
-    hydrogen_factor = hydrogen_mass / mass
-    helium_factor = helium_mass / mass
-    carbon_factor = carbon_mass / mass
-}
-
-
-
-
-function change_helium(value){
-    let helium_mass = helium_factor * mass
-    let hydrogen_mass = hydrogen_factor * mass
-    let carbon_mass = carbon_factor * mass
-    helium_mass += value
-    mass += value
-    helium_factor = helium_mass / mass
-    hydrogen_factor = hydrogen_mass / mass
-    carbon_factor = carbon_mass / mass
-}
-
-
-
-
-function change_carbon(value){
-    let helium_mass = helium_factor * mass
-    let hydrogen_mass = hydrogen_factor * mass
-    let carbon_mass = carbon_factor * mass
-    carbon_mass += value
-    mass += value
-    helium_factor = helium_mass / mass
-    hydrogen_factor = hydrogen_mass / mass
-    carbon_factor = carbon_mass / mass
 }
 
 
@@ -357,6 +227,39 @@ function display_functions(functions, parameter_values = [0,1]) {
 
 
 
+
+
+
+
+
+const gravitational_constant = 6.67430e-11 //m^3 kg^-1 s^-2
+
+const earth_atmosphere_mass = 5.148e+18 //Kg
+const earth_ocean_mass = 1.4e+21 //Kg
+const moon_mass = 7.34767e+22 //Kg
+const earth_mass = 5.97219e+24 //Kg
+const jupiter_mass = 1.898e+27 //Kg
+const solar_mass = 1.9891e+30 //Kg
+
+const ice_density = 900 //Kg/m^3
+const hydrogen_fusion_temperature_requirement = 10 ** 8
+const helium_fusion_temperature_requirement = 10 ** 9
+const max_fuel_available = 0.9
+const fusion_speed_multiplier = 5.1e+13
+const density_change_damping = 10
+
+// Variables
+let time = 10 ** 0
+let average_density = 150000 //Kg/m3
+let expansion_velocity = 0 //m/s
+let core_temperature = 1.5e+8 //K
+
+let hydrogen_mass = 1 * solar_mass //Kg
+let helium_mass = 0 //Kg
+let carbon_mass = 0 //Kg
+
+
+
 const d_time_slider = document.getElementById('time_slider')
 d_time_slider.addEventListener('input', ()=>{
     document.getElementById('time_label').textContent = d_time_slider.value / 10
@@ -364,21 +267,63 @@ d_time_slider.addEventListener('input', ()=>{
 })
 
 
-
 setInterval(main, 100)
-
-
-
 function main(){
+    
+    //Constants
+    const mass = hydrogen_mass +  helium_mass + carbon_mass //Kg
+    const radius = (mass / average_density * (3/(4*Math.PI))) ** (1/3) //m
+    const surface_gravity = gravitational_constant * mass / radius ** 2 //m/s^2
+    const core_mass_factor =  Math.min(max_fuel_available / ((mass / (solar_mass * 0.4)) ** 3), max_fuel_available) //This function approximates the fusion fuel availability for different classes of stars
+    const core_mass = mass * core_mass_factor //Kg
+    const surface_temperature = core_temperature / radius * 5000 //K. This is an approximation
 
-    radius = (mass / average_density * (3/4/Math.PI)) ** (1/3) //m
 
-    core_mass_factor =  Math.min(max_fuel_available / ((mass / (solar_mass * 0.4)) ** 3), max_fuel_available)
-    core_mass = mass * core_mass_factor
+    const temperature = (depth)=>{ //K
+        depth = clamp(depth)
+        return (core_temperature - surface_temperature) * depth ** 2 + surface_temperature
+    }
 
-    display_variables({mass, average_density, radius, surface_gravity, core_mass, core_mass_factor, hydrogen_factor, helium_factor, carbon_factor})
 
-    display_functions({temperature, density, hydrogen_fusion}, [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1])
+    const density = (depth)=>{ //Kg/m3
+        depth = clamp(depth)
+        return average_density * depth ** 2
+    }
+
+
+    const pressure = (depth)=>{ //gigapascal 1 000 000 000N/m2
+        depth = clamp(depth)
+        return density(depth) * temperature(depth) / 1e+6 //Approximation to get the value to be close to the observed value in the sun
+    }
+
+
+    const hydrogen_fusion = (depth)=>{ //Watts
+        depth = clamp(depth)
+        return (density(depth) * relu(temperature(depth) - hydrogen_fusion_temperature_requirement)) * fusion_speed_multiplier
+    }
+
+
+    const helium_fusion = (depth)=>{ //Watts
+        depth = clamp(depth)
+        return (density(depth) * relu(temperature(depth) - helium_fusion_temperature_requirement)) * fusion_speed_multiplier
+    }
+
+
+    const fusion = (depth)=>{ //Watts
+        depth = clamp(depth)
+        return hydrogen_fusion(depth) + helium_fusion(depth)
+    }
+
+
+    core_temperature += fusion(1) * time / mass / 1e+9
+    expansion_velocity += (pressure(1) / 1e+4 - surface_gravity) * time / 1e+10
+    average_density -= expansion_velocity * time
+    core_temperature -= expansion_velocity * (core_temperature / 10) * time
+
+
+    display_variables({mass, average_density, radius, expansion_velocity, surface_gravity, core_mass, core_mass_factor, hydrogen_mass, helium_mass, carbon_mass})
+
+    display_functions({temperature, density, pressure, hydrogen_fusion}, [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1])
 
     /*
     d_percent_bar_hydrogen_core.style.width = (hydrogen_in_core_factor * 100) + '%'
