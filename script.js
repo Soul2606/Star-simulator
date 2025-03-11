@@ -275,7 +275,7 @@ function display_variables(variables) {
 
 
 
-const chart_instance = {}
+const chart_instances = {}
 function display_functions(functions, parameter_values = [0,1]) {
     if (typeof functions === 'object' && (!Array.isArray(functions)) && Array.isArray(parameter_values)) {
         
@@ -291,22 +291,44 @@ function display_functions(functions, parameter_values = [0,1]) {
             if (typeof function_reference === 'function') {
                 const labels = parameter_values
                 const results = parameter_values.map(function_reference)
+                
+
+
+                const function_info_container_id = `function-display-container${index}`
+                let function_info_container = document.getElementById(function_info_container_id)
+                if (!function_info_container) {
+                    function_info_container = document.createElement('div')
+                    function_info_container.id = function_info_container_id
+                    function_display_div.appendChild(function_info_container)
+                }
+
+
+
+                const function_name_id = `function-display-name${index}`
+                let function_name = document.getElementById(function_name_id)
+                if (!function_name) {
+                    function_name = document.createElement('p')
+                    function_name.id = function_name_id
+                    function_info_container.appendChild(function_name)
+                }
+                function_name.textContent = key
+                
+                
+
                 const canvas_id = `function-display-canvas${index}`
-
                 let canvas = document.getElementById(canvas_id)
-
                 if (!canvas) {                    
                     canvas = document.createElement('canvas')
                     canvas.id = canvas_id
-                    function_display_div.appendChild(canvas)
+                    function_info_container.appendChild(canvas)
                 }
 
-                if (chart_instance[canvas_id]) {
-                    chart_instance[canvas_id].data.labels = labels
-                    chart_instance[canvas_id].data.datasets[0].data = results
-                    chart_instance[canvas_id].update()
+                if (chart_instances[canvas_id]) {
+                    chart_instances[canvas_id].data.labels = labels
+                    chart_instances[canvas_id].data.datasets[0].data = results
+                    chart_instances[canvas_id].update()
                 } else {
-                    chart_instance[canvas_id] = new Chart(canvas, {
+                    chart_instances[canvas_id] = new Chart(canvas, {
                         type: 'line',
                         data:{
                             labels:labels,
@@ -356,7 +378,7 @@ function main(){
 
     display_variables({mass, average_density, radius, surface_gravity, core_mass, core_mass_factor, hydrogen_factor, helium_factor, carbon_factor})
 
-    display_functions({temperature, density}, [0,0.2,0.4,0.6,0.8,1])
+    display_functions({temperature, density, hydrogen_fusion}, [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1])
 
     /*
     d_percent_bar_hydrogen_core.style.width = (hydrogen_in_core_factor * 100) + '%'
